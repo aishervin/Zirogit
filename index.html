@@ -3,268 +3,871 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>☬ SHΞN Copilot – ایجنت کامل گیت‌هاب</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+  <meta name="theme-color" content="#0f172a" />
+  <title>☬ SHΞN zero GIT – ایجنت هوشمند گیت‌هاب</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- CodeMirror -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+  
+  <!-- JSZip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  
   <style>
-    * { margin:0; padding:0; box-sizing:border-box; font-family:'Segoe UI',system-ui,sans-serif; }
-    body { background:#0b0e14; color:#e4e9f0; height:100vh; display:flex; flex-direction:column; overflow:hidden; }
-    ::-webkit-scrollbar { width:6px; height:6px; }
-    ::-webkit-scrollbar-track { background:#1e252f; }
-    ::-webkit-scrollbar-thumb { background:#3b4a5e; border-radius:8px; }
+    :root {
+      --bg-primary: #0f172a;
+      --bg-secondary: #1e293b;
+      --bg-tertiary: #334155;
+      --text-primary: #f1f5f9;
+      --text-secondary: #94a3b8;
+      --accent: #f59e0b;
+      --accent-hover: #d97706;
+      --danger: #ef4444;
+      --danger-hover: #dc2626;
+      --success: #10b981;
+      --border: #334155;
+      --shadow: rgba(0, 0, 0, 0.3);
+      --sidebar-width: 280px;
+      --header-height: 64px;
+      --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
 
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Vazirmatn', system-ui, -apple-system, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      line-height: 1.6;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-secondary); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+
+    /* Header */
     .app-header {
-      background:#141a22; padding:10px 16px; display:flex; align-items:center; justify-content:space-between;
-      border-bottom:1px solid #2a3440; flex-shrink:0; gap:8px; flex-wrap:wrap;
+      background: rgba(15, 23, 42, 0.95);
+      backdrop-filter: blur(12px);
+      padding: 0 20px;
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid var(--border);
+      flex-shrink: 0;
+      z-index: 100;
+      position: sticky;
+      top: 0;
     }
-    .app-header .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:1.2rem; }
-    .app-header .brand i { color:#f0b34b; font-size:1.5rem; }
-    .app-header .brand span { background:linear-gradient(135deg,#f0b34b,#d4883a); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
-    .header-actions { display:flex; gap:6px; flex-wrap:wrap; }
-    .header-actions button {
-      background:#1f2937; border:none; color:#c8d0dc; padding:5px 12px; border-radius:30px;
-      font-size:0.75rem; display:flex; align-items:center; gap:5px; cursor:pointer; transition:0.2s;
-    }
-    .header-actions button:hover { background:#2d3b4c; color:#fff; }
-    .header-actions button.primary { background:#f0b34b; color:#0b0e14; }
-    .header-actions button.primary:hover { background:#dba03e; }
-    .header-actions button.danger { background:#b33f3f; color:#fff; }
-    .header-actions button.danger:hover { background:#a03232; }
 
-    .app-body { display:flex; flex:1; overflow:hidden; }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-weight: 700;
+      font-size: 1.25rem;
+    }
+
+    .brand i {
+      color: var(--accent);
+      font-size: 1.5rem;
+      filter: drop-shadow(0 0 8px rgba(245, 158, 11, 0.4));
+    }
+
+    .brand span {
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .btn {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 8px 16px;
+      border-radius: 12px;
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+
+    .btn:hover {
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px var(--shadow);
+    }
+
+    .btn.primary {
+      background: var(--accent);
+      color: var(--bg-primary);
+      border-color: var(--accent);
+    }
+
+    .btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .btn.danger {
+      background: var(--danger);
+      color: white;
+      border-color: var(--danger);
+    }
+
+    .btn.danger:hover {
+      background: var(--danger-hover);
+    }
+
+    .btn.icon-only {
+      padding: 8px;
+      border-radius: 50%;
+    }
+
+    .menu-toggle {
+      display: none;
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 8px;
+      border-radius: 8px;
+      transition: var(--transition);
+    }
+
+    .menu-toggle:hover {
+      background: var(--bg-secondary);
+    }
+
+    /* Main Layout */
+    .app-body {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+
+    /* Sidebar */
     .file-sidebar {
-      background:#11171f; width:260px; border-left:1px solid #1e2834; overflow-y:auto;
-      padding:8px 0; flex-shrink:0; display:none;
+      background: var(--bg-secondary);
+      width: var(--sidebar-width);
+      border-left: 1px solid var(--border);
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      transition: var(--transition);
     }
-    .file-sidebar .tree-item {
-      padding:3px 8px 3px 16px; cursor:pointer; font-size:0.8rem; display:flex; align-items:center;
-      gap:5px; color:#b0bec5; transition:0.1s; white-space:nowrap;
-    }
-    .file-sidebar .tree-item i { width:18px; color:#78909c; font-size:0.85rem; }
-    .file-sidebar .tree-item.active { background:#1f2a38; color:#fff; }
-    .file-sidebar .tree-item:hover { background:#1a2430; }
-    .file-sidebar .tree-item.folder { color:#88c0d0; }
-    .file-sidebar .tree-item.folder i { color:#88c0d0; }
-    .file-sidebar .tree-item .indent { display:inline-block; width:16px; }
 
-    .editor-chat { flex:1; display:flex; flex-direction:column; min-width:0; }
-    .editor-wrapper { flex:1; position:relative; background:#0d1117; min-height:200px; border-bottom:1px solid #1e2834; }
-    .editor-wrapper .CodeMirror { height:100% !important; font-size:13px; direction:ltr; text-align:left; }
+    .sidebar-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+
+    .sidebar-header i {
+      color: var(--accent);
+    }
+
+    .file-tree {
+      flex: 1;
+      padding: 8px 0;
+      overflow-y: auto;
+    }
+
+    .tree-item {
+      padding: 10px 20px;
+      cursor: pointer;
+      font-size: 0.875rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--text-secondary);
+      transition: var(--transition);
+      border-right: 3px solid transparent;
+    }
+
+    .tree-item:hover {
+      background: rgba(51, 65, 85, 0.5);
+      color: var(--text-primary);
+    }
+
+    .tree-item.active {
+      background: rgba(245, 158, 11, 0.1);
+      color: var(--accent);
+      border-right-color: var(--accent);
+    }
+
+    .tree-item.folder {
+      color: #60a5fa;
+    }
+
+    .tree-item.folder i {
+      color: #60a5fa;
+    }
+
+    .tree-item i {
+      width: 20px;
+      text-align: center;
+      font-size: 0.9rem;
+    }
+
+    .upload-zone {
+      border: 2px dashed var(--border);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+      margin: 16px 20px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: var(--transition);
+    }
+
+    .upload-zone:hover {
+      border-color: var(--accent);
+      background: rgba(245, 158, 11, 0.05);
+    }
+
+    .upload-zone i {
+      font-size: 2rem;
+      margin-bottom: 8px;
+      display: block;
+    }
+
+    .new-repo-btn {
+      margin: 0 20px 20px;
+      background: var(--bg-tertiary);
+      border: none;
+      color: var(--text-primary);
+      padding: 12px 20px;
+      border-radius: 12px;
+      width: calc(100% - 40px);
+      cursor: pointer;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition);
+    }
+
+    .new-repo-btn:hover {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    /* Editor & Chat */
+    .editor-chat {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+      overflow: hidden;
+    }
+
+    .editor-wrapper {
+      flex: 1;
+      position: relative;
+      background: var(--bg-primary);
+      border-bottom: 1px solid var(--border);
+      min-height: 200px;
+    }
+
+    .editor-wrapper .CodeMirror {
+      height: 100% !important;
+      font-size: 14px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      direction: ltr;
+      text-align: left;
+    }
 
     .chat-section {
-      background:#0f151d; border-top:1px solid #1e2834; display:flex; flex-direction:column;
-      max-height:45vh; min-height:180px;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      max-height: 45vh;
+      min-height: 200px;
     }
+
     .chat-messages {
-      flex:1; overflow-y:auto; padding:10px 14px; display:flex; flex-direction:column; gap:8px;
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
     }
-    .chat-messages .msg {
-      max-width:88%; padding:8px 12px; border-radius:14px; font-size:0.85rem; line-height:1.5;
-      word-wrap:break-word; animation:fadeIn 0.2s;
+
+    .msg {
+      max-width: 85%;
+      padding: 12px 18px;
+      border-radius: 16px;
+      font-size: 0.9rem;
+      line-height: 1.6;
+      word-wrap: break-word;
+      animation: slideIn 0.3s ease-out;
     }
-    .chat-messages .msg.user { align-self:flex-end; background:#1f2a38; border-bottom-left-radius:4px; }
-    .chat-messages .msg.assistant { align-self:flex-start; background:#1a232f; border-bottom-right-radius:4px; color:#d4dce6; }
-    .chat-messages .msg .code-block {
-      background:#0b0e14; padding:6px 10px; border-radius:6px; font-family:'Courier New',monospace;
-      font-size:0.75rem; overflow-x:auto; white-space:pre-wrap; margin:4px 0; border:1px solid #2a3440;
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
     }
+
+    .msg.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent), #fbbf24);
+      color: var(--bg-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    .msg.assistant {
+      align-self: flex-start;
+      background: var(--bg-tertiary);
+      color: var(--text-primary);
+      border-bottom-right-radius: 4px;
+    }
+
+    .msg .code-block {
+      background: var(--bg-primary);
+      padding: 12px;
+      border-radius: 8px;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.8rem;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      margin: 8px 0;
+      border: 1px solid var(--border);
+    }
+
     .chat-input-area {
-      display:flex; gap:8px; padding:8px 14px 10px; background:#0b0e14; border-top:1px solid #1e2834;
-      align-items:center;
+      display: flex;
+      gap: 12px;
+      padding: 16px 20px;
+      background: var(--bg-primary);
+      border-top: 1px solid var(--border);
+      align-items: center;
     }
-    .chat-input-area input {
-      flex:1; background:#1a232f; border:1px solid #2a3440; padding:8px 14px; border-radius:30px;
-      color:#e4e9f0; font-size:0.85rem; outline:none; transition:0.2s;
-    }
-    .chat-input-area input:focus { border-color:#f0b34b; }
-    .chat-input-area button {
-      background:#f0b34b; border:none; color:#0b0e14; width:40px; height:40px; border-radius:50%;
-      font-size:1.1rem; cursor:pointer; transition:0.2s; display:flex; align-items:center; justify-content:center;
-    }
-    .chat-input-area button:hover { background:#dba03e; }
-    .chat-input-area button:disabled { opacity:0.4; cursor:not-allowed; }
 
+    .chat-input {
+      flex: 1;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border);
+      padding: 12px 20px;
+      border-radius: 24px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .chat-input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .send-btn {
+      background: var(--accent);
+      border: none;
+      color: var(--bg-primary);
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .send-btn:hover {
+      background: var(--accent-hover);
+      transform: scale(1.05);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    /* Terminal */
     .terminal-log {
-      background:#0a0d12; border-top:1px solid #1a232f; padding:4px 14px; max-height:100px;
-      overflow-y:auto; font-family:'Courier New',monospace; font-size:0.7rem; color:#7a8a9e;
-      flex-shrink:0; line-height:1.6; direction:ltr; text-align:left;
+      background: #0a0e1a;
+      border-top: 1px solid var(--border);
+      padding: 8px 20px;
+      max-height: 120px;
+      overflow-y: auto;
+      font-family: 'Fira Code', monospace;
+      font-size: 0.75rem;
+      color: #64748b;
+      flex-shrink: 0;
+      line-height: 1.8;
+      direction: ltr;
+      text-align: left;
     }
-    .terminal-log .log-entry { border-bottom:1px solid #141c26; padding:1px 0; }
-    .terminal-log .log-entry .time { color:#4a5a6e; margin-right:8px; }
-    .terminal-log .log-entry .ok { color:#6fcf97; }
-    .terminal-log .log-entry .err { color:#e86a6a; }
-    .terminal-log .log-entry .info { color:#88c0d0; }
 
+    .log-entry {
+      border-bottom: 1px solid rgba(51, 65, 85, 0.5);
+      padding: 2px 0;
+    }
+
+    .log-entry .time { color: #475569; margin-left: 8px; }
+    .log-entry .ok { color: var(--success); }
+    .log-entry .err { color: var(--danger); }
+    .log-entry .info { color: #60a5fa; }
+
+    /* Modal */
     .modal-overlay {
-      position:fixed; inset:0; background:rgba(0,0,0,0.7); backdrop-filter:blur(4px);
-      display:none; align-items:center; justify-content:center; z-index:999;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(8px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 0.3s ease;
     }
-    .modal-overlay.active { display:flex; }
+
+    .modal-overlay.active {
+      display: flex;
+      opacity: 1;
+    }
+
     .modal-box {
-      background:#1a232f; border-radius:24px; padding:24px 20px; width:94%; max-width:560px;
-      max-height:90vh; overflow-y:auto; border:1px solid #2a3440; box-shadow:0 20px 40px rgba(0,0,0,0.6);
+      background: var(--bg-secondary);
+      border-radius: 24px;
+      padding: 32px 28px;
+      width: 90%;
+      max-width: 560px;
+      max-height: 90vh;
+      overflow-y: auto;
+      border: 1px solid var(--border);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transform: scale(0.95);
+      transition: transform 0.3s ease;
     }
-    .modal-box h3 { margin-bottom:16px; display:flex; align-items:center; gap:8px; color:#f0b34b; font-size:1.1rem; }
-    .modal-box label { display:block; margin:12px 0 4px; font-size:0.8rem; color:#b0bec5; }
-    .modal-box input, .modal-box select, .modal-box textarea {
-      width:100%; padding:8px 12px; background:#0b0e14; border:1px solid #2a3440;
-      border-radius:10px; color:#e4e9f0; font-size:0.85rem; outline:none;
-    }
-    .modal-box input:focus, .modal-box select:focus, .modal-box textarea:focus { border-color:#f0b34b; }
-    .modal-box textarea { min-height:60px; resize:vertical; font-family:monospace; font-size:0.8rem; }
-    .modal-actions { display:flex; gap:10px; margin-top:20px; justify-content:flex-end; }
-    .modal-actions button { padding:6px 20px; border-radius:30px; border:none; cursor:pointer; font-weight:600; }
-    .modal-actions .btn-secondary { background:#2a3440; color:#c8d0dc; }
-    .modal-actions .btn-primary { background:#f0b34b; color:#0b0e14; }
-    .modal-actions .btn-danger { background:#b33f3f; color:#fff; }
 
-    .file-upload-zone {
-      border:2px dashed #2a3440; border-radius:12px; padding:16px; text-align:center;
-      margin:8px 0; color:#78909c; cursor:pointer; transition:0.2s;
+    .modal-overlay.active .modal-box {
+      transform: scale(1);
     }
-    .file-upload-zone:hover { border-color:#f0b34b; background:#1a232f; }
-    .repo-list-item {
-      padding:6px 12px; background:#1a232f; border-radius:8px; margin:4px 0;
-      display:flex; justify-content:space-between; align-items:center; font-size:0.85rem;
-    }
-    .repo-list-item button { background:transparent; border:none; color:#f0b34b; cursor:pointer; }
 
-    @media (min-width:768px) {
-      .file-sidebar { display:block; }
-      .chat-section { max-height:40vh; }
-      .app-body { flex-direction:row; }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+      color: var(--accent);
+      font-size: 1.25rem;
+      font-weight: 700;
     }
-    @media (max-width:767px) {
-      .app-header .brand span { font-size:1rem; }
-      .header-actions button span { display:none; }
-      .chat-section { max-height:50vh; min-height:180px; }
-      .modal-box { padding:16px; }
-      .menu-toggle { display:block !important; }
+
+    .modal-header i {
+      font-size: 1.5rem;
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .form-input,
+    .form-select,
+    .form-textarea {
+      width: 100%;
+      padding: 12px 16px;
+      background: var(--bg-primary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+      outline: none;
+      transition: var(--transition);
+      font-family: inherit;
+    }
+
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.1);
+    }
+
+    .form-textarea {
+      min-height: 80px;
+      resize: vertical;
+      font-family: monospace;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 28px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      padding: 10px 24px;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 0.9rem;
+      transition: var(--transition);
+    }
+
+    .modal-btn.secondary {
+      background: var(--bg-tertiary);
+      color: var(--text-secondary);
+    }
+
+    .modal-btn.secondary:hover {
+      background: var(--border);
+      color: var(--text-primary);
+    }
+
+    .modal-btn.primary {
+      background: var(--accent);
+      color: var(--bg-primary);
+    }
+
+    .modal-btn.primary:hover {
+      background: var(--accent-hover);
+    }
+
+    .modal-btn.danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .modal-btn.danger:hover {
+      background: var(--danger-hover);
+    }
+
+    /* Toast Notifications */
+    .toast-container {
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      z-index: 2000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .toast {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      box-shadow: 0 10px 25px var(--shadow);
+      animation: slideInLeft 0.3s ease-out;
+      min-width: 280px;
+    }
+
+    @keyframes slideInLeft {
+      from { opacity: 0; transform: translateX(-100%); }
+      to { opacity: 1; transform: translateX(0); }
+    }
+
+    .toast.success { border-right: 4px solid var(--success); }
+    .toast.error { border-right: 4px solid var(--danger); }
+    .toast.info { border-right: 4px solid #60a5fa; }
+
+    .toast i { font-size: 1.2rem; }
+    .toast.success i { color: var(--success); }
+    .toast.error i { color: var(--danger); }
+    .toast.info i { color: #60a5fa; }
+
+    /* Spinner */
+    .spinner {
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Responsive */
+    @media (min-width: 768px) {
+      .file-sidebar { display: flex; }
+      .chat-section { max-height: 40vh; }
+      .btn span { display: inline; }
+    }
+
+    @media (max-width: 767px) {
+      .app-header { padding: 0 12px; }
+      .brand span { font-size: 1rem; }
+      .btn span { display: none; }
+      .btn.icon-only span { display: inline; }
+      .chat-section { max-height: 50vh; min-height: 180px; }
+      .modal-box { padding: 24px 20px; width: 95%; }
+      .menu-toggle { display: block; }
+      
+      .file-sidebar {
+        position: fixed;
+        top: var(--header-height);
+        right: -100%;
+        bottom: 0;
+        width: 85%;
+        max-width: 320px;
+        z-index: 99;
+        background: var(--bg-secondary);
+        box-shadow: -5px 0 25px rgba(0, 0, 0, 0.5);
+      }
+
       .file-sidebar.mobile-show {
-        display:block; position:fixed; top:56px; left:0; bottom:0; width:260px;
-        z-index:100; background:#11171f; border-left:none; border-right:1px solid #1e2834;
-        box-shadow:4px 0 20px rgba(0,0,0,0.6);
+        right: 0;
+      }
+
+      .modal-overlay {
+        padding: 10px;
       }
     }
-    .menu-toggle { display:none; background:transparent; border:none; color:#c8d0dc; font-size:1.3rem; cursor:pointer; padding:4px 8px; }
-    @keyframes fadeIn { from { opacity:0; transform:translateY(4px); } to { opacity:1; transform:translateY(0); } }
-    .spinner { display:inline-block; animation:spin 0.8s linear infinite; }
-    @keyframes spin { to { transform:rotate(360deg); } }
+
+    /* Utility */
+    .hidden { display: none !important; }
+    .text-center { text-align: center; }
+    .mt-4 { margin-top: 16px; }
+    .mb-4 { margin-bottom: 16px; }
   </style>
 </head>
 <body>
 
+<!-- Header -->
 <header class="app-header">
-  <div class="brand"><i class="fas fa-robot"></i><span>SHΞN zero GIT</span></div>
+  <div class="brand">
+    <i class="fas fa-robot"></i>
+    <span>SHΞN zero GIT</span>
+  </div>
   <div class="header-actions">
-    <button class="menu-toggle" id="menuToggle"><i class="fas fa-bars"></i></button>
-    <button id="loadBtn"><i class="fas fa-cloud-download-alt"></i><span>بارگیری</span></button>
-    <button id="saveBtn" class="primary"><i class="fas fa-save"></i><span>ذخیره</span></button>
-    <button id="commitBtn" class="danger"><i class="fas fa-code-branch"></i><span>کامیت</span></button>
-    <button id="downloadBtn"><i class="fas fa-download"></i><span>دانلود</span></button>
-    <button id="settingsBtn"><i class="fas fa-cog"></i></button>
+    <button class="menu-toggle" id="menuToggle" aria-label="منو">
+      <i class="fas fa-bars"></i>
+    </button>
+    <button class="btn" id="loadBtn">
+      <i class="fas fa-cloud-download-alt"></i>
+      <span>بارگیری</span>
+    </button>
+    <button class="btn primary" id="saveBtn">
+      <i class="fas fa-save"></i>
+      <span>ذخیره</span>
+    </button>
+    <button class="btn danger" id="commitBtn">
+      <i class="fas fa-code-branch"></i>
+      <span>کامیت</span>
+    </button>
+    <button class="btn" id="downloadBtn">
+      <i class="fas fa-download"></i>
+      <span>دانلود</span>
+    </button>
+    <button class="btn icon-only" id="settingsBtn" aria-label="تنظیمات">
+      <i class="fas fa-cog"></i>
+    </button>
   </div>
 </header>
 
+<!-- Main Body -->
 <div class="app-body">
-  <div class="file-sidebar" id="fileSidebar">
-    <div style="padding:6px 14px; color:#78909c; font-size:0.7rem; border-bottom:1px solid #1a232f; margin-bottom:6px;">
-      <i class="fas fa-folder-tree"></i> ساختار مخزن
+  <!-- Sidebar -->
+  <aside class="file-sidebar" id="fileSidebar">
+    <div class="sidebar-header">
+      <i class="fas fa-folder-tree"></i>
+      <span>ساختار مخزن</span>
     </div>
-    <div id="fileTree"></div>
-    <div class="file-upload-zone" id="uploadZone">
-      <i class="fas fa-cloud-upload-alt"></i> آپلود فایل (کلیک یا کشیدن)
+    <div class="file-tree" id="fileTree"></div>
+    <div class="upload-zone" id="uploadZone">
+      <i class="fas fa-cloud-upload-alt"></i>
+      <div>آپلود فایل</div>
+      <div style="font-size: 0.75rem; margin-top: 4px;">کلیک یا کشیدن فایل</div>
     </div>
-    <div style="padding:8px 14px; border-top:1px solid #1a232f; margin-top:6px;">
-      <button id="newRepoBtn" style="background:#1f2937;border:none;color:#c8d0dc;padding:6px 12px;border-radius:20px;width:100%;cursor:pointer;">
-        <i class="fas fa-plus-circle"></i> ساخت ریپوزیتوری جدید
-      </button>
-    </div>
-  </div>
+    <button class="new-repo-btn" id="newRepoBtn">
+      <i class="fas fa-plus-circle"></i>
+      ساخت ریپوزیتوری جدید
+    </button>
+  </aside>
 
-  <div class="editor-chat">
+  <!-- Editor & Chat -->
+  <main class="editor-chat">
     <div class="editor-wrapper">
       <textarea id="codeEditor" style="display:none;">// بارگذاری فایل...</textarea>
     </div>
     <div class="chat-section">
       <div class="chat-messages" id="chatMessages">
-        <div class="msg assistant">👋 سلام! من 
-         از سری باتهای SHΞN™ ورژن زیروگیت ، ایجنت گیت‌هاب شما هستم. با توکن Full Access می‌توانم ریپو بسازم، کلون کنم، ویرایش کنم و کامیت بزنم. تنظیمات را از دکمه‌ی چرخ‌دنده وارد کنید.</div>
+        <div class="msg assistant">
+          👋 سلام! من <strong>SHΞN zero GIT</strong> هستم، ایجنت هوشمند گیت‌هاب شما.<br><br>
+          با توکن Full Access می‌توانم:<br>
+          ✓ ریپوزیتوری جدید بسازم<br>
+          ✓ پروژه‌ها را کلون کنم<br>
+          ✓ فایل‌ها را ویرایش و کامیت کنم<br>
+          ✓ با هوش مصنوعی کد بنویسم<br><br>
+          برای شروع، از دکمه ⚙️ تنظیمات را کامل کنید.
+        </div>
       </div>
       <div class="chat-input-area">
-        <input type="text" id="chatInput" placeholder="درخواست خود را بنویسید..." />
-        <button id="sendChatBtn"><i class="fas fa-paper-plane"></i></button>
+        <input type="text" class="chat-input" id="chatInput" placeholder="درخواست خود را بنویسید..." autocomplete="off" />
+        <button class="send-btn" id="sendChatBtn" aria-label="ارسال">
+          <i class="fas fa-paper-plane"></i>
+        </button>
       </div>
     </div>
+  </main>
+</div>
+
+<!-- Terminal Log -->
+<div class="terminal-log" id="terminalLog">
+  <div class="log-entry">
+    <span class="time">[SYSTEM]</span>
+    <span class="info">▶ آماده به کار. لطفاً تنظیمات را کامل کنید.</span>
   </div>
 </div>
 
-<div class="terminal-log" id="terminalLog">
-  <div class="log-entry"><span class="time">[سیستم]</span> <span class="info">▶ آماده به کار. تنظیمات را کامل کنید.</span></div>
-</div>
-
-<!-- Modal Settings -->
+<!-- Settings Modal -->
 <div class="modal-overlay" id="settingsModal">
   <div class="modal-box">
-    <h3><i class="fas fa-sliders-h"></i> تنظیمات اصلی</h3>
-    <label>توکن گیت‌هاب (Full Access: repo, admin:repo_hook, delete_repo)</label>
-    <input type="text" id="githubTokenInput" placeholder="github_pat_..." />
-    <label>مخزن هدف (اختیاری – اگر خالی باشد، لیست ریپوها نمایش داده می‌شود)</label>
-    <input type="text" id="repoInput" placeholder="owner/repo" />
-    <label>شاخه (branch)</label>
-    <input type="text" id="branchInput" value="main" />
-
-    <label>مدل هوش مصنوعی</label>
-    <select id="modelSelect">
-      <option value="gemini">Gemini (Google)</option>
-      <option value="deepseek">DeepSeek</option>
-      <option value="openai">OpenAI</option>
-    </select>
-    <label>کلید API مدل</label>
-    <input type="text" id="modelApiKeyInput" placeholder="API Key" />
-
-    <label>کلید Serper (برای جستجوی وب)</label>
-    <input type="text" id="serperKeyInput" placeholder="..." />
-
+    <div class="modal-header">
+      <i class="fas fa-sliders-h"></i>
+      <span>تنظیمات اصلی</span>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">توکن گیت‌هاب (Full Access)</label>
+      <input type="text" class="form-input" id="githubTokenInput" placeholder="github_pat_..." autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">مخزن هدف (اختیاری)</label>
+      <input type="text" class="form-input" id="repoInput" placeholder="owner/repo" autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">شاخه (Branch)</label>
+      <input type="text" class="form-input" id="branchInput" value="main" autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">مدل هوش مصنوعی</label>
+      <select class="form-select" id="modelSelect">
+        <option value="gemini">Gemini (Google)</option>
+        <option value="deepseek">DeepSeek</option>
+        <option value="openai">OpenAI</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">کلید API مدل</label>
+      <input type="text" class="form-input" id="modelApiKeyInput" placeholder="API Key" autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">کلید Serper (جستجوی وب)</label>
+      <input type="text" class="form-input" id="serperKeyInput" placeholder="Serper API Key" autocomplete="off" />
+    </div>
+    
     <div class="modal-actions">
-      <button class="btn-secondary" id="modalCloseBtn">بستن</button>
-      <button class="btn-primary" id="modalSaveBtn">ذخیره</button>
+      <button class="modal-btn secondary" id="modalCloseBtn">بستن</button>
+      <button class="modal-btn primary" id="modalSaveBtn">ذخیره تنظیمات</button>
     </div>
   </div>
 </div>
 
-<!-- Modal New Repo -->
+<!-- New Repo Modal -->
 <div class="modal-overlay" id="newRepoModal">
   <div class="modal-box">
-    <h3><i class="fas fa-plus-circle"></i> ساخت ریپوزیتوری جدید</h3>
-    <label>نام ریپوزیتوری</label>
-    <input type="text" id="newRepoName" placeholder="my-new-repo" />
-    <label>توضیحات (اختیاری)</label>
-    <input type="text" id="newRepoDesc" placeholder="توضیحات..." />
-    <label>نوع</label>
-    <select id="newRepoPrivate">
-      <option value="false">Public</option>
-      <option value="true">Private</option>
-    </select>
-    <label>اضافه کردن README اولیه</label>
-    <select id="newRepoReadme">
-      <option value="true">بله</option>
-      <option value="false">خیر</option>
-    </select>
+    <div class="modal-header">
+      <i class="fas fa-plus-circle"></i>
+      <span>ساخت ریپوزیتوری جدید</span>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">نام ریپوزیتوری</label>
+      <input type="text" class="form-input" id="newRepoName" placeholder="my-new-repo" autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">توضیحات (اختیاری)</label>
+      <input type="text" class="form-input" id="newRepoDesc" placeholder="توضیحات..." autocomplete="off" />
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">نوع دسترسی</label>
+      <select class="form-select" id="newRepoPrivate">
+        <option value="false">Public 🌐</option>
+        <option value="true">Private 🔒</option>
+      </select>
+    </div>
+    
+    <div class="form-group">
+      <label class="form-label">README اولیه</label>
+      <select class="form-select" id="newRepoReadme">
+        <option value="true">بله</option>
+        <option value="false">خیر</option>
+      </select>
+    </div>
+    
     <div class="modal-actions">
-      <button class="btn-secondary" id="newRepoCloseBtn">لغو</button>
-      <button class="btn-primary" id="newRepoCreateBtn">ساخت</button>
+      <button class="modal-btn secondary" id="newRepoCloseBtn">لغو</button>
+      <button class="modal-btn primary" id="newRepoCreateBtn">ساخت ریپوزیتوری</button>
     </div>
   </div>
 </div>
+
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
 
 <script>
 // ============================================================
-//  SHΞN Copilot – Full GitHub Agent (Create, Clone, Edit, Commit)
+//  SHΞN zero GIT – Professional GitHub Agent
+//  Redesigned with modern UI/UX and mobile-first approach
 // ============================================================
 
 const STATE = {
@@ -283,7 +886,7 @@ const STATE = {
   userRepos: [],
 };
 
-// DOM refs
+// DOM Elements
 const editorTextarea = document.getElementById('codeEditor');
 const chatMessages = document.getElementById('chatMessages');
 const chatInput = document.getElementById('chatInput');
@@ -293,11 +896,27 @@ const fileTreeEl = document.getElementById('fileTree');
 const menuToggle = document.getElementById('menuToggle');
 const fileSidebar = document.getElementById('fileSidebar');
 const uploadZone = document.getElementById('uploadZone');
+const toastContainer = document.getElementById('toastContainer');
 
 let cmEditor = null;
 
-// ---------- Helpers ----------
-function log(msg, type='info') {
+// ---------- Toast Notifications ----------
+function showToast(message, type = 'info') {
+  const toast = document.createElement('div');
+  toast.className = `toast ${type}`;
+  const icons = { success: 'fa-check-circle', error: 'fa-exclamation-circle', info: 'fa-info-circle' };
+  toast.innerHTML = `<i class="fas ${icons[type]}"></i><span>${message}</span>`;
+  toastContainer.appendChild(toast);
+  
+  setTimeout(() => {
+    toast.style.opacity = '0';
+    toast.style.transform = 'translateX(-100%)';
+    setTimeout(() => toast.remove(), 300);
+  }, 4000);
+}
+
+// ---------- Logging ----------
+function log(msg, type = 'info') {
   const time = new Date().toLocaleTimeString('fa-IR');
   const div = document.createElement('div');
   div.className = 'log-entry';
@@ -306,7 +925,8 @@ function log(msg, type='info') {
   terminalLog.scrollTop = terminalLog.scrollHeight;
 }
 
-function appendChat(msg, role='assistant') {
+// ---------- Chat ----------
+function appendChat(msg, role = 'assistant') {
   const div = document.createElement('div');
   div.className = `msg ${role}`;
   let html = msg;
@@ -324,7 +944,7 @@ function setChatLoading(loading) {
 }
 
 // ---------- GitHub API ----------
-async function githubFetch(endpoint, options={}) {
+async function githubFetch(endpoint, options = {}) {
   const url = endpoint.startsWith('http') ? endpoint : `https://api.github.com${endpoint}`;
   const headers = {
     'Authorization': `token ${STATE.githubToken}`,
@@ -339,147 +959,226 @@ async function githubFetch(endpoint, options={}) {
   return res.json();
 }
 
-// ---------- دریافت لیست ریپوهای کاربر ----------
+// ---------- Load User Repositories ----------
 async function loadUserRepos() {
   log('دریافت لیست ریپوزیتوری‌ها...', 'info');
-  const data = await githubFetch('/user/repos?per_page=100&sort=updated');
-  STATE.userRepos = data;
-  // نمایش در چت
-  let list = '📂 **ریپوزیتوری‌های شما:**\n';
-  data.forEach(r => {
-    list += `- ${r.full_name} (${r.private ? '🔒' : '🌐'}) [${r.updated_at.slice(0,10)}]\n`;
-  });
-  appendChat(list, 'assistant');
-  log(`✅ ${data.length} ریپو یافت شد.`, 'ok');
-  return data;
+  showToast('در حال بارگذاری ریپوزیتوری‌ها...', 'info');
+  
+  try {
+    const data = await githubFetch('/user/repos?per_page=100&sort=updated');
+    STATE.userRepos = data;
+    
+    let list = '📂 **ریپوزیتوری‌های شما:**\n\n';
+    data.slice(0, 20).forEach(r => {
+      list += `• ${r.full_name} (${r.private ? '🔒' : '🌐'})\n`;
+    });
+    
+    if (data.length > 20) list += `\n... و ${data.length - 20} ریپوی دیگر`;
+    
+    appendChat(list, 'assistant');
+    log(`✅ ${data.length} ریپو یافت شد.`, 'ok');
+    showToast(`${data.length} ریپوزیتوری بارگذاری شد`, 'success');
+    return data;
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در بارگذاری ریپوزیتوری‌ها', 'error');
+    throw err;
+  }
 }
 
-// ---------- ساخت ریپوزیتوری جدید ----------
+// ---------- Create New Repository ----------
 async function createNewRepo(name, description, isPrivate, withReadme) {
   log(`ساخت ریپو: ${name}...`, 'info');
-  const data = await githubFetch('/user/repos', {
-    method: 'POST',
-    body: JSON.stringify({
-      name,
-      description,
-      private: isPrivate,
-      auto_init: withReadme,
-    }),
-    headers: { 'Content-Type': 'application/json' },
-  });
-  log(`✅ ریپو ${data.full_name} ساخته شد.`, 'ok');
-  appendChat(`✅ ریپوزیتوری **${data.full_name}** با موفقیت ساخته شد.`, 'assistant');
-  STATE.repo = data.full_name;
-  STATE.branch = 'main';
-  // بارگذاری خودکار
-  await loadFullTree();
-  const first = findFirstFile(STATE.fileTree);
-  if (first) await loadFileContent(first.path);
-  renderTree(STATE.fileTree, fileTreeEl, 0);
-  return data;
+  showToast('در حال ساخت ریپوزیتوری...', 'info');
+  
+  try {
+    const data = await githubFetch('/user/repos', {
+      method: 'POST',
+      body: JSON.stringify({
+        name,
+        description,
+        private: isPrivate,
+        auto_init: withReadme,
+      }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    log(`✅ ریپو ${data.full_name} ساخته شد.`, 'ok');
+    appendChat(`✅ ریپوزیتوری **${data.full_name}** با موفقیت ساخته شد.`, 'assistant');
+    showToast('ریپوزیتوری با موفقیت ساخته شد', 'success');
+    
+    STATE.repo = data.full_name;
+    STATE.branch = 'main';
+    await loadFullTree();
+    
+    const first = findFirstFile(STATE.fileTree);
+    if (first) await loadFileContent(first.path);
+    renderTree(STATE.fileTree, fileTreeEl, 0);
+    
+    return data;
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در ساخت ریپوزیتوری', 'error');
+    throw err;
+  }
 }
 
-// ---------- کلون کردن پروژه از ریپو دیگر ----------
+// ---------- Clone Repository ----------
 async function cloneRepo(sourceRepo, targetRepo) {
   log(`کلون کردن ${sourceRepo} به ${targetRepo}...`, 'info');
-  // 1. دریافت درخت کامل منبع
-  const [srcOwner, srcName] = sourceRepo.split('/');
-  const srcUrl = `https://api.github.com/repos/${srcOwner}/${srcName}/git/trees/main?recursive=1`;
-  const treeData = await githubFetch(srcUrl);
-  const files = treeData.tree.filter(item => item.type === 'blob');
-  // 2. برای هر فایل، محتوا را بگیر و به ریپوی هدف بفرست
-  const [tgtOwner, tgtName] = targetRepo.split('/');
-  for (let item of files) {
-    try {
-      const contentRes = await fetch(item.url, { headers: { 'Authorization': `token ${STATE.githubToken}` } });
-      const contentData = await contentRes.json();
-      const binary = atob(contentData.content);
-      const bytes = new Uint8Array(binary.length);
-      for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      const decoded = new TextDecoder('utf-8').decode(bytes);
-      // ارسال به ریپوی هدف
-      const encoded = btoa(String.fromCharCode(...new TextEncoder().encode(decoded)));
-      await githubFetch(`/repos/${tgtOwner}/${tgtName}/contents/${encodeURIComponent(item.path)}`, {
-        method: 'PUT',
-        body: JSON.stringify({
-          message: `کلون شده از ${sourceRepo}`,
-          content: encoded,
-          branch: 'main',
-        }),
-        headers: { 'Content-Type': 'application/json' },
-      });
-    } catch(e) { log(`خطا در ${item.path}: ${e.message}`, 'err'); }
-  }
-  log(`✅ کلون کامل شد.`, 'ok');
-  appendChat(`✅ پروژه ${sourceRepo} با موفقیت به ${targetRepo} کلون شد.`, 'assistant');
-  // بارگذاری ریپوی جدید
-  STATE.repo = targetRepo;
-  await loadFullTree();
-  const first = findFirstFile(STATE.fileTree);
-  if (first) await loadFileContent(first.path);
-  renderTree(STATE.fileTree, fileTreeEl, 0);
-}
-
-// ---------- دریافت ساختار درختی ----------
-async function loadFullTree() {
-  if (!STATE.repo) { log('لطفاً ابتدا یک ریپو انتخاب کنید.', 'err'); return; }
-  log('دریافت ساختار کامل مخزن...', 'info');
-  const [owner, repo] = STATE.repo.split('/');
-  const data = await githubFetch(`/repos/${owner}/${repo}/git/trees/${STATE.branch}?recursive=1`);
-  const tree = data.tree.filter(item => item.type === 'blob' || item.type === 'tree');
-  const root = [];
-  const map = {};
-  tree.forEach(item => {
-    const parts = item.path.split('/');
-    let current = root;
-    let pathAcc = '';
-    for (let i = 0; i < parts.length; i++) {
-      const part = parts[i];
-      pathAcc = i === 0 ? part : pathAcc + '/' + part;
-      let node = current.find(n => n.name === part);
-      if (!node) {
-        node = { name: part, path: pathAcc, type: (i === parts.length-1) ? item.type : 'tree', sha: item.sha, children: [] };
-        current.push(node);
-      }
-      if (i < parts.length-1) {
-        if (!node.children) node.children = [];
-        current = node.children;
+  showToast('در حال کلون کردن پروژه...', 'info');
+  
+  try {
+    const [srcOwner, srcName] = sourceRepo.split('/');
+    const srcUrl = `https://api.github.com/repos/${srcOwner}/${srcName}/git/trees/main?recursive=1`;
+    const treeData = await githubFetch(srcUrl);
+    const files = treeData.tree.filter(item => item.type === 'blob');
+    
+    const [tgtOwner, tgtName] = targetRepo.split('/');
+    let successCount = 0;
+    
+    for (let item of files) {
+      try {
+        const contentRes = await fetch(item.url, { 
+          headers: { 'Authorization': `token ${STATE.githubToken}` } 
+        });
+        const contentData = await contentRes.json();
+        
+        const binary = atob(contentData.content);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+        const decoded = new TextDecoder('utf-8').decode(bytes);
+        
+        const encoded = btoa(String.fromCharCode(...new TextEncoder().encode(decoded)));
+        
+        await githubFetch(`/repos/${tgtOwner}/${tgtName}/contents/${encodeURIComponent(item.path)}`, {
+          method: 'PUT',
+          body: JSON.stringify({
+            message: `کلون شده از ${sourceRepo}`,
+            content: encoded,
+            branch: 'main',
+          }),
+          headers: { 'Content-Type': 'application/json' },
+        });
+        
+        successCount++;
+      } catch (e) {
+        log(`خطا در ${item.path}: ${e.message}`, 'err');
       }
     }
-  });
-  STATE.fileTree = root;
-  renderTree(root, fileTreeEl, 0);
-  log(`✅ ساختار درختی با ${tree.length} آیتم دریافت شد.`, 'ok');
-  return root;
+    
+    log(`✅ کلون کامل شد. (${successCount}/${files.length})`, 'ok');
+    appendChat(`✅ پروژه ${sourceRepo} با موفقیت به ${targetRepo} کلون شد.`, 'assistant');
+    showToast(`پروژه کلون شد (${successCount} فایل)`, 'success');
+    
+    STATE.repo = targetRepo;
+    await loadFullTree();
+    
+    const first = findFirstFile(STATE.fileTree);
+    if (first) await loadFileContent(first.path);
+    renderTree(STATE.fileTree, fileTreeEl, 0);
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در کلون پروژه', 'error');
+    throw err;
+  }
+}
+
+// ---------- Load File Tree ----------
+async function loadFullTree() {
+  if (!STATE.repo) {
+    log('لطفاً ابتدا یک ریپو انتخاب کنید.', 'err');
+    showToast('لطفاً یک ریپوزیتوری انتخاب کنید', 'error');
+    return;
+  }
+  
+  log('دریافت ساختار کامل مخزن...', 'info');
+  showToast('در حال بارگذاری ساختار مخزن...', 'info');
+  
+  try {
+    const [owner, repo] = STATE.repo.split('/');
+    const data = await githubFetch(`/repos/${owner}/${repo}/git/trees/${STATE.branch}?recursive=1`);
+    const tree = data.tree.filter(item => item.type === 'blob' || item.type === 'tree');
+    
+    const root = [];
+    tree.forEach(item => {
+      const parts = item.path.split('/');
+      let current = root;
+      let pathAcc = '';
+      
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i];
+        pathAcc = i === 0 ? part : pathAcc + '/' + part;
+        let node = current.find(n => n.name === part);
+        
+        if (!node) {
+          node = { 
+            name: part, 
+            path: pathAcc, 
+            type: (i === parts.length - 1) ? item.type : 'tree', 
+            sha: item.sha, 
+            children: [] 
+          };
+          current.push(node);
+        }
+        
+        if (i < parts.length - 1) {
+          if (!node.children) node.children = [];
+          current = node.children;
+        }
+      }
+    });
+    
+    STATE.fileTree = root;
+    renderTree(root, fileTreeEl, 0);
+    log(`✅ ساختار درختی با ${tree.length} آیتم دریافت شد.`, 'ok');
+    showToast(`ساختار مخزن بارگذاری شد (${tree.length} فایل)`, 'success');
+    return root;
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در بارگذاری ساختار مخزن', 'error');
+    throw err;
+  }
 }
 
 function renderTree(nodes, container, level) {
   container.innerHTML = '';
-  nodes.sort((a,b) => {
+  
+  nodes.sort((a, b) => {
     if (a.type === 'tree' && b.type !== 'tree') return -1;
     if (a.type !== 'tree' && b.type === 'tree') return 1;
     return a.name.localeCompare(b.name);
   });
+  
   nodes.forEach(node => {
     const div = document.createElement('div');
     div.className = 'tree-item';
+    
     if (node.type === 'tree') {
       div.classList.add('folder');
       div.innerHTML = `<i class="fas fa-folder"></i> ${node.name}`;
     } else {
       div.innerHTML = `<i class="fas fa-file-code"></i> ${node.name}`;
     }
-    div.style.paddingRight = `${12 + level * 16}px`;
-    if (node.path === STATE.currentFile) div.classList.add('active');
+    
+    div.style.paddingRight = `${20 + level * 16}px`;
+    
+    if (node.path === STATE.currentFile) {
+      div.classList.add('active');
+    }
+    
     div.dataset.path = node.path;
     div.dataset.type = node.type;
+    
     div.addEventListener('click', async () => {
       if (node.type === 'blob') {
         await loadFileContent(node.path);
         renderTree(nodes, container, level);
       }
     });
+    
     container.appendChild(div);
+    
     if (node.children && node.children.length) {
       const childContainer = document.createElement('div');
       childContainer.style.display = 'block';
@@ -489,81 +1188,132 @@ function renderTree(nodes, container, level) {
   });
 }
 
+// ---------- Load File Content ----------
 async function loadFileContent(path) {
   log(`دریافت محتوای ${path}...`, 'info');
+  
   if (STATE.fileCache.has(path)) {
     const cached = STATE.fileCache.get(path);
     STATE.currentContent = cached.content;
     STATE.currentSha = cached.sha;
     STATE.currentFile = path;
+    
     if (cmEditor) cmEditor.setValue(cached.content);
     else editorTextarea.value = cached.content;
+    
     log(`✅ از کش بارگذاری شد.`, 'ok');
     return cached.content;
   }
-  const [owner, repo] = STATE.repo.split('/');
-  const data = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${STATE.branch}`);
-  const binary = atob(data.content);
-  const bytes = new Uint8Array(binary.length);
-  for (let i=0; i<binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  const content = new TextDecoder('utf-8').decode(bytes);
-  STATE.currentFile = path;
-  STATE.currentSha = data.sha;
-  STATE.currentContent = content;
-  STATE.fileCache.set(path, { content, sha: data.sha });
-  if (cmEditor) cmEditor.setValue(content);
-  else editorTextarea.value = content;
-  log(`✅ فایل ${path} بارگذاری شد (SHA: ${data.sha.slice(0,7)})`, 'ok');
-  return content;
-}
-
-async function commitFile(path, content, message='ویرایش توسط SHΞN Copilot') {
-  log(`ارسال تغییرات ${path}...`, 'info');
-  const [owner, repo] = STATE.repo.split('/');
-  const currentData = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${STATE.branch}`);
-  const sha = currentData.sha;
-  const encoder = new TextEncoder();
-  const data = encoder.encode(content);
-  const base64 = btoa(String.fromCharCode(...data));
-  const result = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
-    method: 'PUT',
-    body: JSON.stringify({ message, content: base64, sha, branch: STATE.branch }),
-    headers: { 'Content-Type': 'application/json' },
-  });
-  log(`✅ کامیت موفق! (SHA جدید: ${result.content.sha.slice(0,7)})`, 'ok');
-  STATE.currentSha = result.content.sha;
-  STATE.fileCache.set(path, { content, sha: result.content.sha });
-  return result;
-}
-
-// ---------- دانلود پروژه ----------
-async function downloadProjectAsZip() {
-  if (!STATE.fileTree.length) { log('ابتدا پروژه را بارگیری کنید.', 'err'); return; }
-  log('در حال ساخت ZIP...', 'info');
-  const zip = new JSZip();
-  const allFiles = [];
-  const collectFiles = (nodes) => {
-    for (let n of nodes) {
-      if (n.type === 'blob') allFiles.push(n.path);
-      if (n.children) collectFiles(n.children);
-    }
-  };
-  collectFiles(STATE.fileTree);
-  for (let path of allFiles) {
-    try {
-      const content = await loadFileContent(path);
-      zip.file(path, content);
-    } catch(e) { log(`خطا در ${path}: ${e.message}`, 'err'); }
+  
+  try {
+    const [owner, repo] = STATE.repo.split('/');
+    const data = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${STATE.branch}`);
+    
+    const binary = atob(data.content);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    const content = new TextDecoder('utf-8').decode(bytes);
+    
+    STATE.currentFile = path;
+    STATE.currentSha = data.sha;
+    STATE.currentContent = content;
+    STATE.fileCache.set(path, { content, sha: data.sha });
+    
+    if (cmEditor) cmEditor.setValue(content);
+    else editorTextarea.value = content;
+    
+    log(`✅ فایل ${path} بارگذاری شد.`, 'ok');
+    showToast(`فایل ${path} بارگذاری شد`, 'success');
+    return content;
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در بارگذاری فایل', 'error');
+    throw err;
   }
-  const blob = await zip.generateAsync({ type: 'blob' });
-  const link = document.createElement('a');
-  link.href = URL.createObjectURL(blob);
-  link.download = `${STATE.repo.replace('/','_')}.zip`;
-  link.click();
-  log('✅ دانلود ZIP کامل شد.', 'ok');
 }
 
-// ---------- آپلود فایل ----------
+// ---------- Commit File ----------
+async function commitFile(path, content, message = 'ویرایش توسط SHΞN zero GIT') {
+  log(`ارسال تغییرات ${path}...`, 'info');
+  showToast('در حال ارسال تغییرات...', 'info');
+  
+  try {
+    const [owner, repo] = STATE.repo.split('/');
+    const currentData = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}?ref=${STATE.branch}`);
+    const sha = currentData.sha;
+    
+    const encoder = new TextEncoder();
+    const data = encoder.encode(content);
+    const base64 = btoa(String.fromCharCode(...data));
+    
+    const result = await githubFetch(`/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`, {
+      method: 'PUT',
+      body: JSON.stringify({ message, content: base64, sha, branch: STATE.branch }),
+      headers: { 'Content-Type': 'application/json' },
+    });
+    
+    log(`✅ کامیت موفق!`, 'ok');
+    showToast('تغییرات با موفقیت ارسال شد', 'success');
+    
+    STATE.currentSha = result.content.sha;
+    STATE.fileCache.set(path, { content, sha: result.content.sha });
+    
+    return result;
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در ارسال تغییرات', 'error');
+    throw err;
+  }
+}
+
+// ---------- Download Project as ZIP ----------
+async function downloadProjectAsZip() {
+  if (!STATE.fileTree.length) {
+    log('ابتدا پروژه را بارگیری کنید.', 'err');
+    showToast('لطفاً ابتدا پروژه را بارگذاری کنید', 'error');
+    return;
+  }
+  
+  log('در حال ساخت ZIP...', 'info');
+  showToast('در حال آماده‌سازی فایل ZIP...', 'info');
+  
+  try {
+    const zip = new JSZip();
+    const allFiles = [];
+    
+    const collectFiles = (nodes) => {
+      for (let n of nodes) {
+        if (n.type === 'blob') allFiles.push(n.path);
+        if (n.children) collectFiles(n.children);
+      }
+    };
+    
+    collectFiles(STATE.fileTree);
+    
+    for (let path of allFiles) {
+      try {
+        const content = await loadFileContent(path);
+        zip.file(path, content);
+      } catch (e) {
+        log(`خطا در ${path}: ${e.message}`, 'err');
+      }
+    }
+    
+    const blob = await zip.generateAsync({ type: 'blob' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${STATE.repo.replace('/', '_')}.zip`;
+    link.click();
+    
+    log('✅ دانلود ZIP کامل شد.', 'ok');
+    showToast('فایل ZIP دانلود شد', 'success');
+  } catch (err) {
+    log(`❌ خطا: ${err.message}`, 'err');
+    showToast('خطا در ساخت فایل ZIP', 'error');
+  }
+}
+
+// ---------- File Upload ----------
 uploadZone.addEventListener('click', () => {
   const input = document.createElement('input');
   input.type = 'file';
@@ -573,125 +1323,195 @@ uploadZone.addEventListener('click', () => {
   };
   input.click();
 });
-uploadZone.addEventListener('dragover', e => { e.preventDefault(); uploadZone.style.borderColor='#f0b34b'; });
-uploadZone.addEventListener('dragleave', () => { uploadZone.style.borderColor='#2a3440'; });
-uploadZone.addEventListener('drop', e => {
+
+uploadZone.addEventListener('dragover', (e) => {
   e.preventDefault();
-  uploadZone.style.borderColor='#2a3440';
+  uploadZone.style.borderColor = 'var(--accent)';
+  uploadZone.style.background = 'rgba(245, 158, 11, 0.1)';
+});
+
+uploadZone.addEventListener('dragleave', () => {
+  uploadZone.style.borderColor = 'var(--border)';
+  uploadZone.style.background = 'transparent';
+});
+
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault();
+  uploadZone.style.borderColor = 'var(--border)';
+  uploadZone.style.background = 'transparent';
   const file = e.dataTransfer.files[0];
   if (file) handleFileUpload(file);
 });
+
 async function handleFileUpload(file) {
   const reader = new FileReader();
   reader.onload = async (e) => {
     const content = e.target.result;
     const path = file.name;
+    
     STATE.fileCache.set(path, { content, sha: 'uploaded' });
+    
     const parts = path.split('/');
     let current = STATE.fileTree;
     let pathAcc = '';
-    for (let i=0; i<parts.length; i++) {
+    
+    for (let i = 0; i < parts.length; i++) {
       const part = parts[i];
-      pathAcc = i===0 ? part : pathAcc+'/'+part;
+      pathAcc = i === 0 ? part : pathAcc + '/' + part;
       let node = current.find(n => n.name === part);
+      
       if (!node) {
-        node = { name: part, path: pathAcc, type: (i===parts.length-1) ? 'blob' : 'tree', children: [] };
+        node = { 
+          name: part, 
+          path: pathAcc, 
+          type: (i === parts.length - 1) ? 'blob' : 'tree', 
+          children: [] 
+        };
         current.push(node);
       }
-      if (i < parts.length-1) {
+      
+      if (i < parts.length - 1) {
         if (!node.children) node.children = [];
         current = node.children;
       }
     }
+    
     renderTree(STATE.fileTree, fileTreeEl, 0);
-    log(`✅ فایل ${path} آپلود شد (در حافظه محلی). برای ذخیره روی گیت‌هاب، «کامیت» را بزنید.`, 'ok');
-    appendChat(`📎 فایل ${path} آپلود شد.`, 'assistant');
+    log(`✅ فایل ${path} آپلود شد.`, 'ok');
+    appendChat(`📎 فایل **${path}** آپلود شد.`, 'assistant');
+    showToast(`فایل ${path} آپلود شد`, 'success');
   };
   reader.readAsText(file);
 }
 
-// ---------- هوش مصنوعی ----------
+// ---------- AI Integration ----------
 async function callAI(systemPrompt, userMessage, codeContext) {
   const model = STATE.model;
   const apiKey = STATE.modelApiKey;
-  if (!apiKey) throw new Error('کلید API مدل تنظیم نشده است.');
+  
+  if (!apiKey) {
+    throw new Error('کلید API مدل تنظیم نشده است.');
+  }
+  
   const fullPrompt = `${systemPrompt}\n\nکد فعلی (${STATE.currentFile}):\n\`\`\`javascript\n${codeContext}\n\`\`\`\n\nدرخواست کاربر: ${userMessage}`;
-
+  
   if (model === 'gemini') {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
-    const payload = { contents: [{ parts: [{ text: fullPrompt }] }], generationConfig: { temperature:0.3, maxOutputTokens:4000 } };
-    const res = await fetch(url, { method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    const payload = { 
+      contents: [{ parts: [{ text: fullPrompt }] }], 
+      generationConfig: { temperature: 0.3, maxOutputTokens: 4000 } 
+    };
+    
+    const res = await fetch(url, { 
+      method: 'POST', 
+      headers: { 'Content-Type': 'application/json' }, 
+      body: JSON.stringify(payload) 
+    });
+    
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    
   } else if (model === 'deepseek') {
     const url = 'https://api.deepseek.com/v1/chat/completions';
     const payload = {
       model: 'deepseek-chat',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: fullPrompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: fullPrompt }
+      ],
       temperature: 0.3,
       max_tokens: 4000
     };
-    const res = await fetch(url, { method:'POST', headers:{'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    
+    const res = await fetch(url, { 
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${apiKey}`, 
+        'Content-Type': 'application/json' 
+      }, 
+      body: JSON.stringify(payload) 
+    });
+    
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
+    
   } else if (model === 'openai') {
     const url = 'https://api.openai.com/v1/chat/completions';
     const payload = {
       model: 'gpt-4-turbo-preview',
-      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: fullPrompt }],
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: fullPrompt }
+      ],
       temperature: 0.3,
       max_tokens: 4000
     };
-    const res = await fetch(url, { method:'POST', headers:{'Authorization':`Bearer ${apiKey}`, 'Content-Type':'application/json'}, body:JSON.stringify(payload) });
+    
+    const res = await fetch(url, { 
+      method: 'POST', 
+      headers: { 
+        'Authorization': `Bearer ${apiKey}`, 
+        'Content-Type': 'application/json' 
+      }, 
+      body: JSON.stringify(payload) 
+    });
+    
     if (!res.ok) throw new Error(await res.text());
     const data = await res.json();
     return data.choices?.[0]?.message?.content || '';
   }
+  
   throw new Error('مدل پشتیبانی نمی‌شود.');
 }
 
-// ---------- پردازش چت ----------
+// ---------- Chat Handler ----------
 async function handleChatRequest(userMessage) {
   if (STATE.isProcessing) return;
   STATE.isProcessing = true;
   setChatLoading(true);
   appendChat(userMessage, 'user');
-
+  
   try {
     if (!STATE.currentContent) {
       const firstFile = findFirstFile(STATE.fileTree);
-      if (firstFile) await loadFileContent(firstFile.path);
-      else { appendChat('⚠️ هیچ فایلی در مخزن یافت نشد.', 'assistant'); return; }
+      if (firstFile) {
+        await loadFileContent(firstFile.path);
+      } else {
+        appendChat('⚠️ هیچ فایلی در مخزن یافت نشد.', 'assistant');
+        return;
+      }
     }
-
-    const systemPrompt = `تو ایجنت کامل گیت‌هاب SHΞN هستی.
+    
+    const systemPrompt = `تو ایجنت کامل گیت‌هاب SHΞN zero GIT هستی.
     - قابلیت‌ها: ساخت ریپو، کلون کردن، ویرایش، کامیت، جستجوی وب (با Serper).
     - برای تغییر کد، کل فایل اصلاح‌شده را در بلاک کد javascript برگردان.
     - اگر سوال است، پاسخ مختصر بده.
     - پاسخ‌ها را به فارسی روان بنویس.
     - در صورت تغییر کد، توضیح تغییرات را نیز ارائه بده.`;
-
+    
     const response = await callAI(systemPrompt, userMessage, STATE.currentContent);
-
     const codeBlockRegex = /```(?:javascript|js)?\s*([\s\S]*?)```/;
     const match = response.match(codeBlockRegex);
-
+    
     if (match && match[1]) {
       const newCode = match[1].trim();
       if (cmEditor) cmEditor.setValue(newCode);
       else editorTextarea.value = newCode;
+      
       appendChat(response, 'assistant');
       appendChat(`🔁 کد در ادیتور به‌روز شد. برای اعمال نهایی، «کامیت» را بزنید.`, 'assistant');
       STATE.currentContent = newCode;
     } else {
       appendChat(response, 'assistant');
     }
+    
     log('🤖 پاسخ ایجنت دریافت شد.', 'info');
   } catch (err) {
     log(`❌ خطا: ${err.message}`, 'err');
     appendChat(`⚠️ خطا: ${err.message}`, 'assistant');
+    showToast(err.message, 'error');
   } finally {
     STATE.isProcessing = false;
     setChatLoading(false);
@@ -701,39 +1521,65 @@ async function handleChatRequest(userMessage) {
 function findFirstFile(nodes) {
   for (let n of nodes) {
     if (n.type === 'blob') return n;
-    if (n.children) { const f = findFirstFile(n.children); if (f) return f; }
+    if (n.children) {
+      const f = findFirstFile(n.children);
+      if (f) return f;
+    }
   }
   return null;
 }
 
-// ---------- ادیتور ----------
+// ---------- Editor Initialization ----------
 function initEditor() {
   if (cmEditor) return;
+  
   cmEditor = CodeMirror.fromTextArea(editorTextarea, {
-    mode: 'javascript', theme: 'dracula', lineNumbers: true,
-    indentUnit: 2, tabSize: 2, viewportMargin: Infinity,
-    extraKeys: { 'Ctrl-S': ()=>saveCurrentFile(), 'Cmd-S': ()=>saveCurrentFile() }
+    mode: 'javascript',
+    theme: 'dracula',
+    lineNumbers: true,
+    indentUnit: 2,
+    tabSize: 2,
+    viewportMargin: Infinity,
+    extraKeys: { 
+      'Ctrl-S': () => saveCurrentFile(), 
+      'Cmd-S': () => saveCurrentFile() 
+    }
   });
+  
   if (STATE.currentContent) cmEditor.setValue(STATE.currentContent);
-  cmEditor.on('change', () => { STATE.currentContent = cmEditor.getValue(); });
+  cmEditor.on('change', () => { 
+    STATE.currentContent = cmEditor.getValue(); 
+  });
 }
 
 function saveCurrentFile() {
   if (!cmEditor) return;
+  
   STATE.currentContent = cmEditor.getValue();
-  STATE.fileCache.set(STATE.currentFile, { content: STATE.currentContent, sha: STATE.currentSha });
-  log(`💾 فایل ${STATE.currentFile} در حافظه محلی و کش ذخیره شد.`, 'info');
-  appendChat(`💾 فایل ذخیره شد (محلی). برای ارسال به گیت‌هاب، «کامیت» را بزنید.`, 'assistant');
+  STATE.fileCache.set(STATE.currentFile, { 
+    content: STATE.currentContent, 
+    sha: STATE.currentSha 
+  });
+  
+  log(`💾 فایل ${STATE.currentFile} ذخیره شد.`, 'info');
+  appendChat(`💾 فایل ذخیره شد. برای ارسال به گیت‌هاب، «کامیت» را بزنید.`, 'assistant');
+  showToast('فایل ذخیره شد', 'success');
 }
 
 async function commitCurrentFile() {
   if (!STATE.currentContent || !STATE.currentSha) {
-    log('❌ فایلی برای کامیت وجود ندارد یا SHA موجود نیست.', 'err');
+    log('❌ فایلی برای کامیت وجود ندارد.', 'err');
+    showToast('فایلی برای کامیت وجود ندارد', 'error');
     return;
   }
-  if (!confirm(`ارسال تغییرات ${STATE.currentFile} به گیت‌هاب؟`)) { log('⏹ لغو شد.', 'info'); return; }
+  
+  if (!confirm(`ارسال تغییرات ${STATE.currentFile} به گیت‌هاب؟`)) {
+    log('⏹ لغو شد.', 'info');
+    return;
+  }
+  
   try {
-    await commitFile(STATE.currentFile, STATE.currentContent, 'ویرایش توسط SHΞN Copilot');
+    await commitFile(STATE.currentFile, STATE.currentContent, 'ویرایش توسط SHΞN zero GIT');
     appendChat(`✅ تغییرات با موفقیت به گیت‌هاب ارسال شد.`, 'assistant');
   } catch (err) {
     log(`❌ خطا: ${err.message}`, 'err');
@@ -741,7 +1587,7 @@ async function commitCurrentFile() {
   }
 }
 
-// ---------- تنظیمات ----------
+// ---------- Settings Modal ----------
 function openSettings() {
   document.getElementById('githubTokenInput').value = STATE.githubToken;
   document.getElementById('repoInput').value = STATE.repo;
@@ -751,7 +1597,11 @@ function openSettings() {
   document.getElementById('serperKeyInput').value = STATE.serperKey || '';
   document.getElementById('settingsModal').classList.add('active');
 }
-function closeSettings() { document.getElementById('settingsModal').classList.remove('active'); }
+
+function closeSettings() {
+  document.getElementById('settingsModal').classList.remove('active');
+}
+
 function saveSettings() {
   STATE.githubToken = document.getElementById('githubTokenInput').value.trim();
   STATE.repo = document.getElementById('repoInput').value.trim();
@@ -759,64 +1609,112 @@ function saveSettings() {
   STATE.model = document.getElementById('modelSelect').value;
   STATE.modelApiKey = document.getElementById('modelApiKeyInput').value.trim();
   STATE.serperKey = document.getElementById('serperKeyInput').value.trim();
+  
   log('🔐 تنظیمات ذخیره شد.', 'info');
+  showToast('تنظیمات با موفقیت ذخیره شد', 'success');
   closeSettings();
+  
   STATE.fileCache.clear();
   STATE.fileTree = [];
   STATE.currentFile = '';
   STATE.currentContent = '';
   renderTree([], fileTreeEl, 0);
-  // اگر ریپو وارد شده، بارگذاری کن
+  
   if (STATE.repo) {
     loadFullTree().then(() => {
       const first = findFirstFile(STATE.fileTree);
       if (first) loadFileContent(first.path);
     });
   }
+  
+  saveSettingsToStorage();
 }
 
 // ---------- Event Listeners ----------
 document.addEventListener('DOMContentLoaded', () => {
+  // Initialize editor
+  initEditor();
+  
+  // Button handlers
   document.getElementById('loadBtn').addEventListener('click', async () => {
-    if (!STATE.repo) { await loadUserRepos(); return; }
-    try { await loadFullTree(); const first = findFirstFile(STATE.fileTree); if (first) await loadFileContent(first.path); renderTree(STATE.fileTree, fileTreeEl, 0); }
-    catch (err) { log(`❌ خطا: ${err.message}`, 'err'); }
+    if (!STATE.repo) {
+      await loadUserRepos();
+      return;
+    }
+    try {
+      await loadFullTree();
+      const first = findFirstFile(STATE.fileTree);
+      if (first) await loadFileContent(first.path);
+      renderTree(STATE.fileTree, fileTreeEl, 0);
+    } catch (err) {
+      log(`❌ خطا: ${err.message}`, 'err');
+    }
   });
-
+  
   document.getElementById('saveBtn').addEventListener('click', saveCurrentFile);
   document.getElementById('commitBtn').addEventListener('click', commitCurrentFile);
   document.getElementById('downloadBtn').addEventListener('click', downloadProjectAsZip);
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('modalCloseBtn').addEventListener('click', closeSettings);
   document.getElementById('modalSaveBtn').addEventListener('click', saveSettings);
-
-  // ساخت ریپو
+  
+  // New repo modal
   document.getElementById('newRepoBtn').addEventListener('click', () => {
     document.getElementById('newRepoModal').classList.add('active');
   });
+  
   document.getElementById('newRepoCloseBtn').addEventListener('click', () => {
     document.getElementById('newRepoModal').classList.remove('active');
   });
+  
   document.getElementById('newRepoCreateBtn').addEventListener('click', async () => {
     const name = document.getElementById('newRepoName').value.trim();
-    if (!name) { alert('لطفاً نام ریپو را وارد کنید.'); return; }
+    if (!name) {
+      showToast('لطفاً نام ریپو را وارد کنید', 'error');
+      return;
+    }
+    
     const desc = document.getElementById('newRepoDesc').value.trim();
     const isPrivate = document.getElementById('newRepoPrivate').value === 'true';
     const withReadme = document.getElementById('newRepoReadme').value === 'true';
-    await createNewRepo(name, desc, isPrivate, withReadme);
-    document.getElementById('newRepoModal').classList.remove('active');
+    
+    try {
+      await createNewRepo(name, desc, isPrivate, withReadme);
+      document.getElementById('newRepoModal').classList.remove('active');
+    } catch (err) {
+      // Error already handled in createNewRepo
+    }
   });
-
+  
+  // Chat handlers
   sendBtn.addEventListener('click', () => {
     const text = chatInput.value.trim();
     if (!text) return;
     chatInput.value = '';
     handleChatRequest(text);
   });
-  chatInput.addEventListener('keydown', (e) => { if (e.key==='Enter') { e.preventDefault(); sendBtn.click(); } });
-
-  menuToggle.addEventListener('click', () => { fileSidebar.classList.toggle('mobile-show'); });
-
+  
+  chatInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      sendBtn.click();
+    }
+  });
+  
+  // Mobile menu toggle
+  menuToggle.addEventListener('click', () => {
+    fileSidebar.classList.toggle('mobile-show');
+  });
+  
+  // Close sidebar when clicking outside on mobile
+  document.addEventListener('click', (e) => {
+    if (window.innerWidth <= 767) {
+      if (!fileSidebar.contains(e.target) && !menuToggle.contains(e.target)) {
+        fileSidebar.classList.remove('mobile-show');
+      }
+    }
+  });
+  
   // Load settings from localStorage
   const saved = localStorage.getItem('shenCopilotSettings');
   if (saved) {
@@ -828,47 +1726,55 @@ document.addEventListener('DOMContentLoaded', () => {
       STATE.model = s.model || 'gemini';
       STATE.modelApiKey = s.modelApiKey || '';
       STATE.serperKey = s.serperKey || '';
-    } catch(e) {}
+    } catch (e) {}
   }
-
-  const saveSettingsToStorage = () => {
-    localStorage.setItem('shenCopilotSettings', JSON.stringify({
-      githubToken: STATE.githubToken,
-      repo: STATE.repo,
-      branch: STATE.branch,
-      model: STATE.model,
-      modelApiKey: STATE.modelApiKey,
-      serperKey: STATE.serperKey,
-    }));
-  };
-  const origSave = saveSettings;
-  saveSettings = function() {
-    origSave();
-    saveSettingsToStorage();
-  };
-  document.getElementById('modalSaveBtn').addEventListener('click', saveSettings);
-
-  // اگر توکن و ریپو موجود باشد، بارگذاری خودکار
+  
+  // Auto-load if token and repo exist
   if (STATE.githubToken && STATE.repo) {
     loadFullTree().then(() => {
       const first = findFirstFile(STATE.fileTree);
       if (first) loadFileContent(first.path);
-      initEditor();
     });
   } else if (STATE.githubToken) {
     loadUserRepos();
   }
 });
 
+// Save settings to localStorage
+function saveSettingsToStorage() {
+  localStorage.setItem('shenCopilotSettings', JSON.stringify({
+    githubToken: STATE.githubToken,
+    repo: STATE.repo,
+    branch: STATE.branch,
+    model: STATE.model,
+    modelApiKey: STATE.modelApiKey,
+    serperKey: STATE.serperKey,
+  }));
+}
+
 // Close modals on outside click
 document.getElementById('settingsModal').addEventListener('click', (e) => {
   if (e.target === e.currentTarget) closeSettings();
 });
+
 document.getElementById('newRepoModal').addEventListener('click', (e) => {
-  if (e.target === e.currentTarget) document.getElementById('newRepoModal').classList.remove('active');
+  if (e.target === e.currentTarget) {
+    document.getElementById('newRepoModal').classList.remove('active');
+  }
 });
 
-window.__SHEN = { STATE, loadFileContent, commitFile, handleChatRequest, log, appendChat, createNewRepo, cloneRepo };
+// Global API
+window.__SHEN = { 
+  STATE, 
+  loadFileContent, 
+  commitFile, 
+  handleChatRequest, 
+  log, 
+  appendChat, 
+  createNewRepo, 
+  cloneRepo,
+  showToast 
+};
 </script>
 </body>
 </html>
