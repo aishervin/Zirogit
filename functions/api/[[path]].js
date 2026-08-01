@@ -1,6 +1,6 @@
 /*
  * SHΞN zero GIT - Cloudflare Pages Function
- * API Proxy for GitHub, AI Models, and Serper
+ * API Proxy for GitHub, AI Models, Serper, and Turnstile
  * 
  * Environment Variables Required:
  * - GITHUB_TOKEN
@@ -8,6 +8,7 @@
  * - DEEPSEEK_API_KEY
  * - OPENAI_API_KEY
  * - SERPER_API_KEY
+ * - TURNSTILE_SECRET
  */
 
 export async function onRequest(context) {
@@ -38,6 +39,8 @@ export async function onRequest(context) {
       return await handleOpenAI(path.replace('openai/', ''), request, env);
     } else if (path.startsWith('serper/')) {
       return await handleSerper(path.replace('serper/', ''), request, env);
+    } else if (path === 'turnstile/verify') {
+      return await handleTurnstileVerify(request, env);
     } else {
       return new Response(JSON.stringify({ error: 'Unknown endpoint' }), {
         status: 404,
@@ -195,4 +198,66 @@ async function handleSerper(endpoint, request, env) {
       'Access-Control-Allow-Origin': '*',
     },
   });
+}
+
+// Turnstile Verify Handler
+async function handleTurnstileVerify(request, env) {
+  if (!env.TURNSTILE_SECRET) {
+    return new Response(JSON.stringify({ error: 'TURNSTILE_SECRET not configured' }), { status: 500 });
+  }
+
+  try {
+    const formData = await request.formData();
+    const token = formData.get('cf-turnstile-response');
+    
+    // Get client IP from headers
+    const clientIp = request.headers.get('CF-Connecting-IP') || 
+                     request.headers.get('X-Forwarded-For') || 
+                     'unknown';
+
+    if (!token) {
+      return new Response(JSON.stringify({ success: false, error: 'Missing turnstile token' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Canonical siteverify call
+    const siteverifyUrl = 'https://challenges.cloudflare.com/turnstile/v0/siteverify';
+    const params = new URLSearchParams({
+      secret: env.TURNSTILE_SECRET,
+      response: token,
+      remoteip: clientIp,
+    });
+
+    const response = await fetch(siteverifyUrl, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: params.toString(),
+    });
+
+    if (!response.ok) {
+      throw new Error(`siteverify returned ${response.status}`);
+    }
+
+    const result = await response.json();
+
+    return new Response(JSON.stringify(result), {
+      status: result.success ? 200 : 403,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  } catch (error) {
+    return new Response(JSON.stringify({ success: false, error: error.message }), {
+      status: 500,
+      headers: {
+        'Content-Type': 'application/json',
+        'Access-Control-Allow-Origin': '*',
+      },
+    });
+  }
 }
