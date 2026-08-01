@@ -23,8 +23,7 @@
   <!-- JSZip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
   
-  <!-- Cloudflare Turnstile -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
+  <!-- Cloudflare Turnstile (Removed) -->
 
   
   <style>
@@ -969,35 +968,6 @@
 <div class="toast-container" id="toastContainer"></div>
 
 <!-- ============================================================
-     LOGIN MODAL (Turnstile Protected)
-============================================================ -->
-<div class="modal-overlay active" id="loginModal">
-  <div class="modal-box">
-    <div class="modal-header">
-      <i class="fas fa-shield-alt"></i>
-      <span>ورود ایمن به SHΞN zero GIT</span>
-    </div>
-    
-    <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 0.9rem;">
-      برای ورود به برنامه، لطفاً تأیید امنیتی زیر را کامل کنید.
-    </p>
-    
-    <div style="display: flex; justify-content: center; margin: 30px 0;">
-      <div class="cf-turnstile" 
-           data-sitekey="0x4AAAAAAED2VWZSdhUcbL24" 
-           data-action="turnstile-spin-v2"
-           data-callback="onLoginSuccess"
-           data-error-callback="onLoginError">
-      </div>
-    </div>
-    
-    <div id="loginError" style="color: var(--danger); text-align: center; margin-top: 15px; display: none;">
-      خطا در تأیید امنیتی. لطفاً دوباره تلاش کنید.
-    </div>
-  </div>
-</div>
-
-<!-- ============================================================
      JAVASCRIPT – کاملاً بدون تغییر در منطق اصلی
      فقط طراحی و UX بهبود یافته
 ============================================================ -->
@@ -1040,25 +1010,6 @@ const uploadZone = document.getElementById('uploadZone');
 const toastContainer = document.getElementById('toastContainer');
 
 let cmEditor = null;
-
-// ============================================================
-//  TURNSTILE LOGIN HANDLERS
-// ============================================================
-function onLoginSuccess(token) {
-  // Turnstile verification successful - hide login modal
-  document.getElementById('loginModal').classList.remove('active');
-  log('✅ ورود با موفقیت انجام شد', 'success');
-  showToast('خوش آمدید!', 'success');
-}
-
-function onLoginError() {
-  // Show error message
-  const errorDiv = document.getElementById('loginError');
-  errorDiv.style.display = 'block';
-  setTimeout(() => {
-    errorDiv.style.display = 'none';
-  }, 5000);
-}
 
 // ============================================================
 //  TOAST NOTIFICATIONS (UI improvement)
