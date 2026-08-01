@@ -22,6 +22,9 @@
   
   <!-- JSZip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+
+  <!-- Cloudflare Turnstile -->
+  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   
   <style>
     /* ============================================================
@@ -909,6 +912,12 @@
       <input type="text" class="form-input" id="serperKeyInput" placeholder="Serper API Key" autocomplete="off" />
     </div>
     
+    <!-- Cloudflare Turnstile Widget -->
+    <div class="form-group">
+      <label class="form-label">تأیید امنیتی</label>
+      <div class="cf-turnstile" data-sitekey="0x4AAAAAAED2VWZSdhUcbL24" data-action="turnstile-spin-v2"></div>
+    </div>
+    
     <div class="modal-actions">
       <button class="modal-btn secondary" id="modalCloseBtn">بستن</button>
       <button class="modal-btn primary" id="modalSaveBtn">ذخیره تنظیمات</button>
@@ -1777,7 +1786,49 @@ function closeSettings() {
   document.getElementById('settingsModal').classList.remove('active');
 }
 
-function saveSettings() {
+async function saveSettings() {
+  // Verify Turnstile token before saving
+  const turnstileWidget = document.querySelector('.cf-turnstile');
+  let turnstileToken = null;
+  
+  // Try to get the token from the widget
+  if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
+    turnstileToken = window.turnstile.getResponse();
+  }
+  
+  if (!turnstileToken) {
+    showToast('لطفاً تأیید امنیتی را انجام دهید', 'error');
+    log('❌ تأیید امنیتی انجام نشده است.', 'error');
+    return;
+  }
+  
+  // Verify token with backend
+  try {
+    const formData = new FormData();
+    formData.append('cf-turnstile-response', turnstileToken);
+    
+    const verifyResponse = await fetch('/api/turnstile/verify', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    const result = await verifyResponse.json();
+    
+    if (!result.success) {
+      showToast('تأیید امنیتی ناموفق بود. لطفاً دوباره تلاش کنید.', 'error');
+      log('❌ تأیید امنیتی ناموفق بود.', 'error');
+      // Reset turnstile widget
+      if (window.turnstile && typeof window.turnstile.reset === 'function') {
+        window.turnstile.reset();
+      }
+      return;
+    }
+  } catch (error) {
+    showToast('خطا در برقراری ارتباط با سرور امنیتی', 'error');
+    log('❌ خطا در تأیید امنیتی: ' + error.message, 'error');
+    return;
+  }
+  
   STATE.githubToken = document.getElementById('githubTokenInput').value.trim();
   STATE.repo = document.getElementById('repoInput').value.trim();
   STATE.branch = document.getElementById('branchInput').value.trim() || 'main';
