@@ -15,7 +15,7 @@
 
 1. وارد [Cloudflare Dashboard](https://dash.cloudflare.com/) شوید
 2. به بخش **Workers & Pages** بروید
-3. روی **Create Application** کلیک کنید
+3. روی **Create Application** کلیک کنید 
 4. **Pages** را انتخاب کنید
 5. **Connect to Git** را بزنید
 6. مخزن `aishervin/Zirogit` را انتخاب کنید
