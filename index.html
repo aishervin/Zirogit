@@ -23,8 +23,6 @@
   <!-- JSZip -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
-  <!-- Cloudflare Turnstile -->
-  <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   
   <style>
     /* ============================================================
@@ -912,20 +910,6 @@
       <input type="text" class="form-input" id="serperKeyInput" placeholder="Serper API Key" autocomplete="off" />
     </div>
     
-    <!-- Cloudflare Turnstile Widget -->
-    <div class="form-group">
-      <label class="form-label">تأیید امنیتی</label>
-      <div class="cf-turnstile" 
-           data-sitekey="0x4AAAAAAED2VWZSdhUcbL24" 
-           data-action="turnstile-spin-v2"
-           data-callback="turnstileCallback"
-           data-error-callback="turnstileErrorCallback">
-      </div>
-      <p id="turnstileStatus" style="font-size: 0.85rem; color: var(--text-muted); margin-top: 8px;">
-        در حال بارگذاری تأیید امنیتی...
-      </p>
-    </div>
-    
     <div class="modal-actions">
       <button class="modal-btn secondary" id="modalCloseBtn">بستن</button>
       <button class="modal-btn primary" id="modalSaveBtn">ذخیره تنظیمات</button>
@@ -1795,61 +1779,7 @@ function closeSettings() {
 }
 
 async function saveSettings() {
-  // Verify Turnstile token before saving
-  const turnstileWidget = document.querySelector('.cf-turnstile');
-  let turnstileToken = null;
-  
-  // Try to get the token from the widget
-  if (window.turnstile && typeof window.turnstile.getResponse === 'function') {
-    turnstileToken = window.turnstile.getResponse();
-  }
-  
-  // Check if turnstile is verified via callback or has a token
-  if (!turnstileVerified && !turnstileToken) {
-    showToast('لطفاً صبر کنید تا تأیید امنیتی بارگذاری شود', 'error');
-    log('❌ تأیید امنیتی هنوز بارگذاری نشده است.', 'error');
-    return;
-  }
-  
-  if (!turnstileToken) {
-    showToast('تأیید امنیتی تکمیل نشده. لطفاً دوباره تلاش کنید.', 'error');
-    log('❌ توکن تأیید امنیتی یافت نشد.', 'error');
-    return;
-  }
-  
-  // Verify token with backend
-  try {
-    const formData = new FormData();
-    formData.append('cf-turnstile-response', turnstileToken);
-    
-    const verifyResponse = await fetch('/api/turnstile/verify', {
-      method: 'POST',
-      body: formData,
-    });
-    
-    const result = await verifyResponse.json();
-    
-    if (!result.success) {
-      showToast('تأیید امنیتی ناموفق بود. لطفاً دوباره تلاش کنید.', 'error');
-      log('❌ تأیید امنیتی ناموفق بود.', 'error');
-      // Reset turnstile widget
-      if (window.turnstile && typeof window.turnstile.reset === 'function') {
-        window.turnstile.reset();
-      }
-      turnstileVerified = false;
-      const statusEl = document.getElementById('turnstileStatus');
-      if (statusEl) {
-        statusEl.textContent = '❌ تأیید امنیتی ناموفق بود';
-        statusEl.style.color = 'var(--danger)';
-      }
-      return;
-    }
-  } catch (error) {
-    showToast('خطا در برقراری ارتباط با سرور امنیتی', 'error');
-    log('❌ خطا در تأیید امنیتی: ' + error.message, 'error');
-    return;
-  }
-  
+  // Turnstile verification removed - direct save
   STATE.githubToken = document.getElementById('githubTokenInput').value.trim();
   STATE.repo = document.getElementById('repoInput').value.trim();
   STATE.branch = document.getElementById('branchInput').value.trim() || 'main';
@@ -1991,31 +1921,6 @@ document.getElementById('newRepoModal').addEventListener('click', (e) => {
     document.getElementById('newRepoModal').classList.remove('active');
   }
 });
-
-// ============================================================
-//  TURNSTILE CALLBACKS
-// ============================================================
-let turnstileVerified = false;
-
-function turnstileCallback(token) {
-  turnstileVerified = true;
-  const statusEl = document.getElementById('turnstileStatus');
-  if (statusEl) {
-    statusEl.textContent = '✅ تأیید امنیتی با موفقیت انجام شد';
-    statusEl.style.color = 'var(--success)';
-  }
-  console.log('Turnstile verified:', token);
-}
-
-function turnstileErrorCallback() {
-  turnstileVerified = false;
-  const statusEl = document.getElementById('turnstileStatus');
-  if (statusEl) {
-    statusEl.textContent = '❌ خطا در بارگذاری تأیید امنیتی. صفحه را رفرش کنید.';
-    statusEl.style.color = 'var(--danger)';
-  }
-  console.error('Turnstile error callback triggered');
-}
 
 // ============================================================
 //  GLOBAL API
